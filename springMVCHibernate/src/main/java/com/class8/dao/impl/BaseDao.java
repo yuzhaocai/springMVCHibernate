@@ -3,6 +3,7 @@ package com.class8.dao.impl;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.math.BigInteger;
 import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
@@ -11,6 +12,9 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Projections;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.class8.bean.Page;
+import com.class8.bean.Pageable;
 import com.class8.dao.IBaseDao;
 
 public class BaseDao<T,ID extends Serializable> implements IBaseDao<T,ID> {
@@ -80,7 +84,7 @@ public class BaseDao<T,ID extends Serializable> implements IBaseDao<T,ID> {
 	}
 	
 	/**
-	 * 删除给定的对象
+	 * 批量删除
 	 * @param entities
 	 */
 	public void delete(Iterable<? extends T> entities){
@@ -137,8 +141,30 @@ public class BaseDao<T,ID extends Serializable> implements IBaseDao<T,ID> {
 	 */
 	public long count(){
 		Criteria criteria = getSession().createCriteria(entityClass);
-        return Long.valueOf(criteria.setProjection(Projections.rowCount())  
+        return Integer.valueOf(criteria.setProjection(Projections.rowCount())  
                 .uniqueResult().toString());  
+	}
+	
+	/**
+	 * 根据hql语句获取对象总数
+	 * @param hql
+	 * @param values
+	 * @return
+	 */
+	public long count(String countHql, Object... values){
+		Query query = this.createQuery(countHql, values);
+		return (long) query.uniqueResult();
+	}
+	
+	/**
+	 * 根据sql语句获取分页的总数
+	 * @param sql
+	 * @param values
+	 * @return
+	 */
+	public long countBySql(String countSql,Object... values){
+		SQLQuery sqlQuery = this.createSQLQuery(countSql, values);
+		return (long) sqlQuery.uniqueResult();
 	}
 	
 	/**
@@ -157,7 +183,7 @@ public class BaseDao<T,ID extends Serializable> implements IBaseDao<T,ID> {
 	 * @param size
 	 * @return
 	 */
-	public List<T> findAll(int page,int size){
+	public Page<T> findAll(Pageable pageable){
 		//TODO
 		return null;
 	}
@@ -169,22 +195,31 @@ public class BaseDao<T,ID extends Serializable> implements IBaseDao<T,ID> {
 	 * @param size
 	 * @return
 	 */
-	public List<T> find(String hql,int page,int size){
-		//TODO
-		return null;
+	@SuppressWarnings("unchecked")
+	public List<T> find(Pageable pageable,String hql,Object... values){
+		Query query = this.createQuery(hql, values); 
+		query.setFirstResult(pageable.getOffset());
+		query.setMaxResults(pageable.getPageSize());
+		List<T> result = query.list();
+		return result;
 	}
 	
 	/**
-	 * fen
+	 * 根据sql分页查询对象
 	 * @param sql
 	 * @param page
 	 * @param size
 	 * @return
 	 */
-	public List<T> find(String sql,int page,int size){
-		//TODO
+	@SuppressWarnings("unchecked")
+	public List<T> findBySql(Pageable pageable,String sql,Object... values){
+		SQLQuery sqlQuery = this.createSQLQuery(sql, values); 
+		sqlQuery.setFirstResult(pageable.getOffset());
+		sqlQuery.setMaxResults(pageable.getPageSize());
+		sqlQuery.addEntity(entityClass);
+		List<T> result = sqlQuery.list();
+		return result;
 	}
-	
 	
 	/**
 	 * 通过hql语句进行查询
@@ -292,5 +327,11 @@ public class BaseDao<T,ID extends Serializable> implements IBaseDao<T,ID> {
 				query.setParameter(i, values[i]);
 			}
 		}
+	}
+
+	@Override
+	public List<T> findAll(int page, int size) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
