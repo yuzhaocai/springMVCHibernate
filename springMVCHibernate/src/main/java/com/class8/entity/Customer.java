@@ -42,7 +42,6 @@ public class Customer implements Serializable {
 	@Past
 	private Date birthday;
 	
-	@Phone
 	private String phone;
 
 	public String getName() {
