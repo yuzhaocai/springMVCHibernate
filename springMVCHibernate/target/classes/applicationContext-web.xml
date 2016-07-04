@@ -18,11 +18,54 @@
 		<property name="viewClass" value="org.springframework.web.servlet.view.JstlView"></property>
 	</bean>
 	
+	<!-- validation i18n -->
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
 		<property name="basename" value="classpath:message"></property>
 		<property name="defaultEncoding" value="UTF-8"></property>
 		<property name="cacheSeconds" value="120"></property>
 	</bean>
 	
-	<mvc:annotation-driven/>
+	<!-- 开启spring对jsr-303规范的支持 ,mvc:annotation-driven默认回注册该Bean-->
+	<bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+		<!-- 配置jsr-303规范的实现为Hibernate -->
+		<property name="providerClass" value="org.hibernate.validator.HibernateValidator"></property>
+		<!-- 配置ValidationMessageSource,默认classpath下边的ValidationMessages.properties -->
+		<property name="validationMessageSource" ref="messageSource"></property>
+	</bean>
+	
+	<!-- conversionService,类型转换注册器服务,注册自定义的converter和formatter -->
+	<!--  
+	<bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+		<property name="converters">
+			<list>
+				<bean></bean>
+				<bean></bean>
+			</list>
+		</property>
+		<property name="formatters">
+			<list>
+				<bean></bean>
+				<bean></bean>
+			</list>
+		</property>
+	</bean>
+	 -->
+	
+	<!-- webBindingInitializer,通过ConfigurableWebBindingInitializer注册ConversionService -->
+	<!--  
+	<bean id="webBindingInitializer" class="org.springframework.web.bind.support.ConfigurableWebBindingInitializer">
+		<property name="conversionService" ref="conversionService"></property>
+	</bean>
+	-->
+	
+	<!-- HandlerAdapter,通过RequestMappingHandlerAdapter注册webBindingInitializer -->
+	<!--  
+	<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+		<property name="webBindingInitializer" ref="webBindingInitializer"></property>
+	</bean>
+	-->
+	
+	<!-- 注意该配置一般放到配置文件的末尾 -->
+	<!-- 注册validator -->
+	<mvc:annotation-driven validator="validator"/>
 </beans>

@@ -65,6 +65,7 @@
 	</bean>
 	-->
 	
+	<!-- 注意该配置一般放到配置文件的末尾 -->
 	<!-- 注册validator -->
 	<mvc:annotation-driven validator="validator"/>
 </beans>
